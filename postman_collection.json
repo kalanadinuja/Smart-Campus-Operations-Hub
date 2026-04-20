@@ -1,0 +1,299 @@
+{
+  "info": {
+    "name": "Smart Campus Operations Hub",
+    "description": "Complete API collection for the Smart Campus Operations Hub – IT3030 PAF Assignment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login as Admin",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\": \"admin@sliit.lk\", \"name\": \"Admin User\"}"
+            }
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": ["var jsonData = pm.response.json();", "pm.collectionVariables.set('token', jsonData.token);", "pm.test('Status 200', () => pm.response.to.have.status(200));"]
+            }
+          }]
+        },
+        {
+          "name": "Login as User",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\": \"user@sliit.lk\", \"name\": \"Student User\"}" }
+          }
+        },
+        {
+          "name": "Login as Technician",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/login",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"email\": \"tech@sliit.lk\", \"name\": \"Tech Staff\"}" }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/auth/me" }
+        },
+        {
+          "name": "Get All Users (Admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/auth/users" }
+        },
+        {
+          "name": "Update User Role (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/auth/users/{{userId}}/role",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"role\": \"TECHNICIAN\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resources",
+      "item": [
+        {
+          "name": "Get All Resources",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/resources" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"] } }]
+        },
+        {
+          "name": "Get Resources by Type",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/resources?type=LAB" }
+        },
+        {
+          "name": "Get Resource by ID",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/resources/{{resourceId}}" }
+        },
+        {
+          "name": "Create Resource (Admin)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/resources",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Lab A-101\", \"type\": \"LAB\", \"capacity\": 40, \"location\": \"Block A, Floor 1\", \"description\": \"Computer lab with 40 workstations\", \"status\": \"ACTIVE\"}"
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "var jsonData = pm.response.json();", "pm.collectionVariables.set('resourceId', jsonData.id);"] } }]
+        },
+        {
+          "name": "Update Resource (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/resources/{{resourceId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\": \"Lab A-101 Updated\", \"type\": \"LAB\", \"capacity\": 45, \"location\": \"Block A, Floor 1\", \"status\": \"ACTIVE\"}"
+            }
+          }
+        },
+        {
+          "name": "Delete Resource (Admin)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/resources/{{resourceId}}" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/bookings",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"resourceId\": \"{{resourceId}}\", \"date\": \"2026-05-01\", \"startTime\": \"09:00\", \"endTime\": \"11:00\", \"purpose\": \"Lab Session\", \"expectedAttendees\": 30}"
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "var jsonData = pm.response.json();", "pm.collectionVariables.set('bookingId', jsonData.id);"] } }]
+        },
+        {
+          "name": "Create Overlapping Booking (409)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/bookings",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"resourceId\": \"{{resourceId}}\", \"date\": \"2026-05-01\", \"startTime\": \"10:00\", \"endTime\": \"12:00\", \"purpose\": \"Conflicting\", \"expectedAttendees\": 20}"
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));"] } }]
+        },
+        {
+          "name": "Get All Bookings (Admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/bookings" }
+        },
+        {
+          "name": "Get My Bookings",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/bookings/me" }
+        },
+        {
+          "name": "Approve Booking (Admin)",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/api/bookings/{{bookingId}}/approve" }
+        },
+        {
+          "name": "Reject Booking (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/bookings/{{bookingId}}/reject",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"reason\": \"Resource under maintenance\"}" }
+          }
+        },
+        {
+          "name": "Cancel Booking",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/api/bookings/{{bookingId}}/cancel" }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Create Ticket (JSON)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/tickets",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"resourceId\": \"{{resourceId}}\", \"category\": \"Electrical\", \"description\": \"Power outlet not working\", \"priority\": \"HIGH\", \"contactDetails\": \"0771234567\"}"
+            }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "var jsonData = pm.response.json();", "pm.collectionVariables.set('ticketId', jsonData.id);"] } }]
+        },
+        {
+          "name": "Get All Tickets (Admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/tickets" }
+        },
+        {
+          "name": "Get My Tickets",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/tickets/me" }
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/tickets/{{ticketId}}" }
+        },
+        {
+          "name": "Assign Ticket (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/tickets/{{ticketId}}/assign",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"technicianId\": \"{{technicianId}}\"}" }
+          }
+        },
+        {
+          "name": "Update Ticket Status",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/tickets/{{ticketId}}/status",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"status\": \"RESOLVED\", \"resolutionNotes\": \"Replaced the outlet\"}" }
+          }
+        },
+        {
+          "name": "Reject Ticket (Admin)",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/tickets/{{ticketId}}/reject",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"reason\": \"Not a valid issue\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Add Comment",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/tickets/{{ticketId}}/comments",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"text\": \"I'll check this today\"}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 201', () => pm.response.to.have.status(201));", "var jsonData = pm.response.json();", "pm.collectionVariables.set('commentId', jsonData.id);"] } }]
+        },
+        {
+          "name": "Get Comments for Ticket",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/tickets/{{ticketId}}/comments" }
+        },
+        {
+          "name": "Update Comment (Owner)",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/comments/{{commentId}}",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\"text\": \"Updated comment\"}" }
+          }
+        },
+        {
+          "name": "Delete Comment (Owner)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/api/comments/{{commentId}}" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications" }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/notifications/unread-count" }
+        },
+        {
+          "name": "Mark as Read",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read" }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/api/notifications/read-all" }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Analytics (Admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/analytics" }
+        }
+      ]
+    }
+  ]
+}
