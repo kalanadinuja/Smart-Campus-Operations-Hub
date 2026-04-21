@@ -42,10 +42,11 @@ const LoginPage: React.FC = () => {
 
   return (
     <Box sx={{
-      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      minHeight: '100vh', display: 'flex', flexDirection: 'column',
       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     }}>
-      <Card sx={{ maxWidth: 420, width: '100%', mx: 2, borderRadius: 3, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+      <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Card sx={{ maxWidth: 420, width: '100%', mx: 2, borderRadius: 3, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <School sx={{ fontSize: 48, color: '#667eea' }} />
@@ -88,6 +89,25 @@ const LoginPage: React.FC = () => {
           </Box>
         </CardContent>
       </Card>
+      </Box>
+
+      {/* Footer */}
+      <Box component="footer" sx={{ 
+        py: 2, px: 3, 
+        bgcolor: 'rgba(0,0,0,0.15)', 
+        color: 'rgba(255,255,255,0.8)', 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        justifyContent: 'space-between', 
+        alignItems: 'center' 
+      }}>
+        <Typography variant="body2">
+          © {new Date().getFullYear()} Smart Campus Operations Hub – SLIIT
+        </Typography>
+        <Typography variant="body2">
+          Contact: support@smartcampus.lk | Version 1.0
+        </Typography>
+      </Box>
     </Box>
   );
 };
