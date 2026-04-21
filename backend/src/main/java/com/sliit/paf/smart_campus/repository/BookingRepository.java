@@ -30,4 +30,5 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
 
     List<Booking> findByResourceIdAndDateBetween(String resourceId, LocalDate start, LocalDate end);
     List<Booking> findByDateBetween(LocalDate start, LocalDate end);
+    void deleteByUserId(String userId);
 }

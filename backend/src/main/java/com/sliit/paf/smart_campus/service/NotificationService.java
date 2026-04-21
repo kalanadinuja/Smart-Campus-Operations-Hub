@@ -84,6 +84,22 @@ public class NotificationService {
         notificationRepository.save(n);
     }
 
+    public void createAdminBookingPendingNotifications(Booking booking, List<User> admins) {
+        List<Notification> notifications = admins.stream()
+                .filter(admin -> !admin.getId().equals(booking.getUserId())) // Do not notify the creator
+                .map(admin -> {
+                    Notification n = new Notification();
+                    n.setUserId(admin.getId());
+                    n.setType(NotificationType.BOOKING_PENDING);
+                    n.setMessage("New booking request from " + booking.getUserName() + " for " + booking.getResourceName() + " on " + booking.getDate() + " at " + booking.getStartTime() + "-" + booking.getEndTime());
+                    n.setRelatedId(booking.getId());
+                    n.setCreatedAt(Instant.now());
+                    return n;
+                })
+                .collect(Collectors.toList());
+        notificationRepository.saveAll(notifications);
+    }
+
     public void createTicketStatusNotification(Ticket ticket) {
         Notification n = new Notification();
         n.setUserId(ticket.getUserId());

@@ -21,7 +21,6 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [notifAnchor, setNotifAnchor] = useState<null | HTMLElement>(null);
   
   const handleFilterChange = (field: string, value: any) => {
@@ -74,35 +73,77 @@ const Layout: React.FC = () => {
   );
 
   const drawerContent = (
-    <Box>
-      <Box sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
-          🏫 Smart Campus
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-          Operations Hub
-        </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box>
+        <Box sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
+            🏫 Smart Campus
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+            Operations Hub
+          </Typography>
+        </Box>
+        <List>
+          {filteredMenuItems.map((item) => (
+            <ListItemButton
+              key={item.path}
+              selected={location.pathname === item.path}
+              onClick={() => { navigate(item.path); setMobileOpen(false); }}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(102,126,234,0.12)',
+                  borderRight: '3px solid #667eea',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: location.pathname === item.path ? '#667eea' : 'inherit' }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          ))}
+        </List>
       </Box>
-      <List>
-        {filteredMenuItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => { navigate(item.path); setMobileOpen(false); }}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: 'rgba(102,126,234,0.12)',
-                borderRight: '3px solid #667eea',
-              },
-            }}
+
+      <Box sx={{ flexGrow: 1 }} />
+      <Divider />
+      
+      <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Avatar 
+            src={user?.picture || undefined} 
+            sx={{ width: 40, height: 40, mr: 1.5, bgcolor: '#667eea', fontSize: 16 }}
           >
-            <ListItemIcon sx={{ color: location.pathname === item.path ? '#667eea' : 'inherit' }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItemButton>
-        ))}
-      </List>
+            {!user?.picture && user?.name?.charAt(0)?.toUpperCase()}
+          </Avatar>
+          <Box sx={{ overflow: 'hidden' }}>
+            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
+              {user?.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+              {user?.email}
+            </Typography>
+          </Box>
+        </Box>
+        <Button 
+          fullWidth 
+          variant="outlined" 
+          startIcon={<Logout />} 
+          size="small"
+          onClick={() => { logout(); navigate('/login'); }}
+          sx={{ 
+            color: 'text.secondary', 
+            borderColor: 'divider',
+            '&:hover': {
+              borderColor: 'error.main',
+              color: 'error.main',
+              bgcolor: 'error.50'
+            }
+          }}
+        >
+          Logout
+        </Button>
+      </Box>
     </Box>
   );
 
@@ -128,7 +169,7 @@ const Layout: React.FC = () => {
       </Drawer>
 
       {/* Main content */}
-      <Box sx={{ flexGrow: 1, ml: { md: `${DRAWER_WIDTH}px` } }}>
+      <Box sx={{ flexGrow: 1, ml: { md: `${DRAWER_WIDTH}px` }, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <AppBar position="sticky" sx={{ background: '#fff', color: '#333', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           <Toolbar>
             <IconButton sx={{ display: { md: 'none' }, mr: 1 }} onClick={() => setMobileOpen(true)}>
@@ -223,32 +264,30 @@ const Layout: React.FC = () => {
                 )}
               </Box>
             </Popover>
-
-            {/* User Menu */}
-            <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ ml: 1 }}>
-              <Avatar sx={{ width: 32, height: 32, bgcolor: '#667eea', fontSize: 14 }}>
-                {user?.name?.charAt(0)?.toUpperCase()}
-              </Avatar>
-            </IconButton>
-            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-              <Box sx={{ px: 2, py: 1 }}>
-                <Typography variant="subtitle2">{user?.name}</Typography>
-                <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
-                <Box sx={{ mt: 0.5 }}>
-                  <Chip label={user?.role} size="small" color="primary" variant="outlined" />
-                </Box>
-              </Box>
-              <Divider />
-              <MenuItem onClick={() => { logout(); navigate('/login'); setAnchorEl(null); }}>
-                <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
-                Logout
-              </MenuItem>
-            </Menu>
           </Toolbar>
         </AppBar>
 
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 3, flexGrow: 1 }}>
           <Outlet />
+        </Box>
+
+        {/* Footer */}
+        <Box component="footer" sx={{ 
+          py: 3, px: 4, 
+          bgcolor: '#fff', 
+          color: 'text.secondary', 
+          display: 'flex', 
+          flexWrap: 'wrap', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          borderTop: '1px solid #eaeaea' 
+        }}>
+          <Typography variant="body2">
+            © {new Date().getFullYear()} Smart Campus Operations Hub – SLIIT
+          </Typography>
+          <Typography variant="body2">
+            Contact: support@smartcampus.lk | Version 1.0
+          </Typography>
         </Box>
       </Box>
     </Box>

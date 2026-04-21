@@ -10,4 +10,5 @@ import java.util.List;
 public interface CommentRepository extends MongoRepository<Comment, String> {
     List<Comment> findByTicketIdOrderByCreatedAtAsc(String ticketId);
     long countByTicketId(String ticketId);
+    void deleteByUserId(String userId);
 }

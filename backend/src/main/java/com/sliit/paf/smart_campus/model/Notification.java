@@ -35,6 +35,7 @@ public class Notification {
         BOOKING_APPROVED,
         BOOKING_REJECTED,
         BOOKING_CANCELLED,
+        BOOKING_PENDING,
         TICKET_STATUS_CHANGE,
         TICKET_ASSIGNED,
         TICKET_COMMENT
