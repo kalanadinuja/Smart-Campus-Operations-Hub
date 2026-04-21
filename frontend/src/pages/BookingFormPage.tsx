@@ -29,6 +29,7 @@ const BookingFormPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [resources, setResources] = useState<any[]>([]);
+  const [selectedResourceCapacity, setSelectedResourceCapacity] = useState<number | null>(null);
   const [form, setForm] = useState({
     resourceId: searchParams.get('resourceId') || '',
     date: '',
@@ -41,15 +42,52 @@ const BookingFormPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Get today's date in YYYY-MM-DD format for min attribute
   const today = new Date().toISOString().split('T')[0];
 
+  // Fetch all resources
   useEffect(() => {
     resourceApi
       .getAll({ status: 'ACTIVE' })
-      .then((res) => setResources(res.data))
+      .then((res) => {
+        setResources(res.data);
+        // If a resource is pre-selected via URL param, set its capacity
+        const preSelectedId = searchParams.get('resourceId');
+        if (preSelectedId) {
+          const found = res.data.find((r: any) => r.id === preSelectedId);
+          if (found && found.capacity) {
+            setSelectedResourceCapacity(found.capacity);
+            // Clamp initial attendees if needed
+            if (form.expectedAttendees > found.capacity) {
+              setForm(prev => ({ ...prev, expectedAttendees: found.capacity }));
+            }
+          }
+        }
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [searchParams]);
+
+  // When resource changes, update capacity and clamp attendees
+  const handleResourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newResourceId = e.target.value;
+    const selected = resources.find(r => r.id === newResourceId);
+    const capacity = selected?.capacity || null;
+    setSelectedResourceCapacity(capacity);
+
+    let newAttendees = form.expectedAttendees;
+    if (capacity && newAttendees > capacity) {
+      newAttendees = capacity;
+    }
+    setForm({ ...form, resourceId: newResourceId, expectedAttendees: newAttendees });
+  };
+
+  const handleAttendeesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = parseInt(e.target.value) || 1;
+    if (selectedResourceCapacity && value > selectedResourceCapacity) {
+      value = selectedResourceCapacity;
+    }
+    if (value < 1) value = 1;
+    setForm({ ...form, expectedAttendees: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +104,13 @@ const BookingFormPage: React.FC = () => {
     // Validation: start time must be before end time
     if (form.startTime && form.endTime && form.startTime >= form.endTime) {
       setError('Start time must be before end time.');
+      setSaving(false);
+      return;
+    }
+
+    // Optional: double-check capacity (though backend will also validate)
+    if (selectedResourceCapacity && form.expectedAttendees > selectedResourceCapacity) {
+      setError(`Expected attendees cannot exceed resource capacity (${selectedResourceCapacity}).`);
       setSaving(false);
       return;
     }
@@ -139,13 +184,13 @@ const BookingFormPage: React.FC = () => {
       >
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           <form onSubmit={handleSubmit}>
-            {/* Resource */}
+            {/* Resource with capacity display */}
             <TextField
               fullWidth
               select
               label="Resource"
               value={form.resourceId}
-              onChange={(e) => setForm({ ...form, resourceId: e.target.value })}
+              onChange={handleResourceChange}
               margin="normal"
               required
               slotProps={{
@@ -160,12 +205,13 @@ const BookingFormPage: React.FC = () => {
             >
               {resources.map((r) => (
                 <MenuItem key={r.id} value={r.id}>
-                  {r.name} ({r.type?.replace('_', ' ')})
+                  {r.name} ({r.type?.replace('_', ' ')}) 
+                  {r.capacity ? ` – Capacity: ${r.capacity}` : ''}
                 </MenuItem>
               ))}
             </TextField>
 
-            {/* Date with min = today */}
+            {/* Date */}
             <TextField
               fullWidth
               label="Date"
@@ -182,7 +228,7 @@ const BookingFormPage: React.FC = () => {
                       <CalendarToday color="primary" />
                     </InputAdornment>
                   ),
-                  inputProps: { min: today }, // Prevents past dates
+                  inputProps: { min: today },
                 },
               }}
             />
@@ -250,19 +296,16 @@ const BookingFormPage: React.FC = () => {
               }}
             />
 
-            {/* Expected Attendees */}
+            {/* Expected Attendees with capacity limit */}
             <TextField
               fullWidth
               label="Expected Attendees"
               type="number"
               value={form.expectedAttendees}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  expectedAttendees: parseInt(e.target.value) || 1,
-                })
-              }
+              onChange={handleAttendeesChange}
               margin="normal"
+              helperText={selectedResourceCapacity ? `Max capacity: ${selectedResourceCapacity}` : 'Select a resource first'}
+              disabled={!selectedResourceCapacity}
               slotProps={{
                 input: {
                   startAdornment: (
@@ -270,7 +313,10 @@ const BookingFormPage: React.FC = () => {
                       <People color="primary" />
                     </InputAdornment>
                   ),
-                  inputProps: { min: 1 },
+                  inputProps: { 
+                    min: 1, 
+                    max: selectedResourceCapacity || undefined,
+                  },
                 },
               }}
             />
@@ -295,7 +341,7 @@ const BookingFormPage: React.FC = () => {
               <Button
                 type="submit"
                 variant="contained"
-                disabled={saving}
+                disabled={saving || !selectedResourceCapacity}
                 startIcon={saving ? <CircularProgress size={20} /> : <Send />}
                 sx={{
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
