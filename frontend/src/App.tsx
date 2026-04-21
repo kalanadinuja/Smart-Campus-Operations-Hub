@@ -18,6 +18,7 @@ import TicketDetailPage from './pages/TicketDetailPage';
 import ResourceCalendarPage from './pages/ResourceCalendarPage';
 import UsersPage from './pages/UsersPage';
 import OAuth2RedirectHandler from './pages/OAuth2RedirectHandler';
+import RegisterPage from './pages/RegisterPage';
 
 const theme = createTheme({
   palette: {
@@ -47,6 +48,7 @@ function App() {
           <NotificationProvider>
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
               <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                 <Route index element={<Navigate to="/dashboard" replace />} />

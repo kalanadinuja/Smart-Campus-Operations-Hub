@@ -2,12 +2,14 @@ package com.sliit.paf.smart_campus.controller;
 
 import com.sliit.paf.smart_campus.config.JwtTokenProvider;
 import com.sliit.paf.smart_campus.dto.request.LoginRequest;
+import com.sliit.paf.smart_campus.dto.request.SignupRequest;
 import com.sliit.paf.smart_campus.dto.response.AuthResponse;
 import com.sliit.paf.smart_campus.dto.response.UserResponse;
 import com.sliit.paf.smart_campus.model.User;
 import com.sliit.paf.smart_campus.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,7 +21,7 @@ import java.util.Map;
 
 /**
  * REST controller for authentication and user management.
- * Supports standard password login and OAuth2 Google login.
+ * Supports standard password login, OAuth2 Google login, and user registration.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -45,6 +47,22 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(401).body(Map.of("message", "Invalid email or password"));
         }
+    }
+
+    /** Register a new user account (public, USER role only) */
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequest request) {
+        // Check if email is already registered
+        if (userService.existsByEmail(request.getEmail())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email already registered"));
+        }
+
+        // Create new user with USER role
+        userService.registerUser(request.getName(), request.getEmail(),
+                passwordEncoder.encode(request.getPassword()));
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Account created successfully! Please sign in."));
     }
 
     /** Get current authenticated user */
@@ -78,3 +96,4 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 }
+

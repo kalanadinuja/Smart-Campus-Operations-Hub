@@ -34,6 +34,8 @@ api.interceptors.response.use(
 export const authApi = {
   login: (email: string, password: string) =>
     api.post('/api/auth/signin', { email, password }),
+  signup: (name: string, email: string, password: string) =>
+    api.post('/api/auth/signup', { name, email, password }),
   getMe: () => api.get('/api/auth/me'),
   getUsers: (search?: string, role?: string) => {
     const params: any = {};

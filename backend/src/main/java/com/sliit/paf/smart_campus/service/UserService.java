@@ -66,6 +66,22 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
     }
 
+    /** Check if email is already registered */
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    /** Register a new user with USER role (sign-up) */
+    public User registerUser(String name, String email, String hashedPassword) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setPassword(hashedPassword);
+        user.setRole(Role.USER);
+        user.setCreatedAt(Instant.now());
+        return userRepository.save(user);
+    }
+
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }

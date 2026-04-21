@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Box, Card, CardContent, TextField, Button, Typography,
-  Alert, CircularProgress, Divider,
+  Alert, CircularProgress, Divider, Link,
 } from '@mui/material';
 import { School, Google } from '@mui/icons-material';
 
@@ -77,6 +77,15 @@ const LoginPage: React.FC = () => {
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
             </Button>
           </form>
+
+          <Box sx={{ textAlign: 'center', mt: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              Don't have an account?{' '}
+              <Link component={RouterLink} to="/register" underline="hover" sx={{ fontWeight: 600, color: '#667eea' }}>
+                Sign up
+              </Link>
+            </Typography>
+          </Box>
         </CardContent>
       </Card>
     </Box>
