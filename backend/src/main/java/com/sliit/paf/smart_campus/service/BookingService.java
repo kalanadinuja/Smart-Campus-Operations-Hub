@@ -12,8 +12,11 @@ import com.sliit.paf.smart_campus.model.Resource;
 import com.sliit.paf.smart_campus.model.User;
 import com.sliit.paf.smart_campus.repository.BookingRepository;
 import com.sliit.paf.smart_campus.repository.ResourceRepository;
+import com.sliit.paf.smart_campus.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Service layer for booking management with overlap detection.
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingService {
@@ -31,8 +35,10 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
     private final NotificationService notificationService;
+    private final UserRepository userRepository;
 
     /** Create a booking – checks for time overlap (returns 409 if conflict) */
+    @Transactional
     public BookingResponse createBooking(BookingRequest request, User user) {
         Resource resource = resourceRepository.findById(request.getResourceId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -69,6 +75,15 @@ public class BookingService {
         booking.setUpdatedAt(Instant.now());
 
         Booking saved = bookingRepository.save(booking);
+
+        // Notify admins asynchronously or within try-catch to not fail the booking process
+        try {
+            List<User> admins = userRepository.findByRole(User.Role.ADMIN);
+            notificationService.createAdminBookingPendingNotifications(saved, admins);
+        } catch (Exception e) {
+            log.error("Failed to send admin notifications for new booking: {}", e.getMessage(), e);
+        }
+
         return toResponse(saved);
     }
 
