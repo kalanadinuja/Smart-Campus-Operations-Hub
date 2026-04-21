@@ -44,19 +44,16 @@ const BookingFormPage: React.FC = () => {
 
   const today = new Date().toISOString().split('T')[0];
 
-  // Fetch all resources
   useEffect(() => {
     resourceApi
       .getAll({ status: 'ACTIVE' })
       .then((res) => {
         setResources(res.data);
-        // If a resource is pre-selected via URL param, set its capacity
         const preSelectedId = searchParams.get('resourceId');
         if (preSelectedId) {
           const found = res.data.find((r: any) => r.id === preSelectedId);
           if (found && found.capacity) {
             setSelectedResourceCapacity(found.capacity);
-            // Clamp initial attendees if needed
             if (form.expectedAttendees > found.capacity) {
               setForm(prev => ({ ...prev, expectedAttendees: found.capacity }));
             }
@@ -66,7 +63,6 @@ const BookingFormPage: React.FC = () => {
       .finally(() => setLoading(false));
   }, [searchParams]);
 
-  // When resource changes, update capacity and clamp attendees
   const handleResourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newResourceId = e.target.value;
     const selected = resources.find(r => r.id === newResourceId);
@@ -94,21 +90,34 @@ const BookingFormPage: React.FC = () => {
     setSaving(true);
     setError('');
 
-    // Validation: date cannot be in the past
+    // 1. Date cannot be in the past
     if (form.date && form.date < today) {
       setError('Booking date cannot be in the past. Please select today or a future date.');
       setSaving(false);
       return;
     }
 
-    // Validation: start time must be before end time
+    // 2. Start time must be before end time
     if (form.startTime && form.endTime && form.startTime >= form.endTime) {
       setError('Start time must be before end time.');
       setSaving(false);
       return;
     }
 
-    // Optional: double-check capacity (though backend will also validate)
+    // 3. If date is today, start time must be after current time (improved error message)
+    if (form.date === today && form.startTime) {
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+      if (form.startTime <= currentTime) {
+        setError(
+          `Invalid start time: cannot book a time slot that has already passed (current time ${currentTime}). Please select a later start time.`
+        );
+        setSaving(false);
+        return;
+      }
+    }
+
+    // 4. Capacity check
     if (selectedResourceCapacity && form.expectedAttendees > selectedResourceCapacity) {
       setError(`Expected attendees cannot exceed resource capacity (${selectedResourceCapacity}).`);
       setSaving(false);
@@ -140,7 +149,6 @@ const BookingFormPage: React.FC = () => {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      {/* Hero Section */}
       <Box
         sx={{
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -161,14 +169,12 @@ const BookingFormPage: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Error Alert */}
       {error && (
         <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
           {error}
         </Alert>
       )}
 
-      {/* Form Card */}
       <Card
         sx={{
           borderRadius: 4,
@@ -184,7 +190,6 @@ const BookingFormPage: React.FC = () => {
       >
         <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           <form onSubmit={handleSubmit}>
-            {/* Resource with capacity display */}
             <TextField
               fullWidth
               select
@@ -211,7 +216,6 @@ const BookingFormPage: React.FC = () => {
               ))}
             </TextField>
 
-            {/* Date */}
             <TextField
               fullWidth
               label="Date"
@@ -233,7 +237,6 @@ const BookingFormPage: React.FC = () => {
               }}
             />
 
-            {/* Start & End Time */}
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 1 }}>
               <TextField
                 fullWidth
@@ -275,7 +278,6 @@ const BookingFormPage: React.FC = () => {
               />
             </Box>
 
-            {/* Purpose */}
             <TextField
               fullWidth
               label="Purpose"
@@ -296,7 +298,6 @@ const BookingFormPage: React.FC = () => {
               }}
             />
 
-            {/* Expected Attendees with capacity limit */}
             <TextField
               fullWidth
               label="Expected Attendees"
@@ -321,21 +322,8 @@ const BookingFormPage: React.FC = () => {
               }}
             />
 
-            {/* Buttons */}
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 2,
-                justifyContent: 'flex-end',
-                mt: 4,
-              }}
-            >
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/bookings')}
-                startIcon={<Cancel />}
-                sx={{ borderRadius: 2, px: 3 }}
-              >
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4 }}>
+              <Button variant="outlined" onClick={() => navigate('/bookings')} startIcon={<Cancel />}>
                 Cancel
               </Button>
               <Button
