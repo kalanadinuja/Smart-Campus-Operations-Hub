@@ -74,35 +74,77 @@ const Layout: React.FC = () => {
   );
 
   const drawerContent = (
-    <Box>
-      <Box sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
-          🏫 Smart Campus
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-          Operations Hub
-        </Typography>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box>
+        <Box sx={{ p: 2, textAlign: 'center', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <Typography variant="h6" sx={{ color: '#fff', fontWeight: 700 }}>
+            🏫 Smart Campus
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+            Operations Hub
+          </Typography>
+        </Box>
+        <List>
+          {filteredMenuItems.map((item) => (
+            <ListItemButton
+              key={item.path}
+              selected={location.pathname === item.path}
+              onClick={() => { navigate(item.path); setMobileOpen(false); }}
+              sx={{
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(102,126,234,0.12)',
+                  borderRight: '3px solid #667eea',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: location.pathname === item.path ? '#667eea' : 'inherit' }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.text} />
+            </ListItemButton>
+          ))}
+        </List>
       </Box>
-      <List>
-        {filteredMenuItems.map((item) => (
-          <ListItemButton
-            key={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => { navigate(item.path); setMobileOpen(false); }}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: 'rgba(102,126,234,0.12)',
-                borderRight: '3px solid #667eea',
-              },
-            }}
+
+      <Box sx={{ flexGrow: 1 }} />
+      <Divider />
+      
+      <Box sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Avatar 
+            src={user?.picture || undefined} 
+            sx={{ width: 40, height: 40, mr: 1.5, bgcolor: '#667eea', fontSize: 16 }}
           >
-            <ListItemIcon sx={{ color: location.pathname === item.path ? '#667eea' : 'inherit' }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItemButton>
-        ))}
-      </List>
+            {!user?.picture && user?.name?.charAt(0)?.toUpperCase()}
+          </Avatar>
+          <Box sx={{ overflow: 'hidden' }}>
+            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 600 }}>
+              {user?.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+              {user?.email}
+            </Typography>
+          </Box>
+        </Box>
+        <Button 
+          fullWidth 
+          variant="outlined" 
+          startIcon={<Logout />} 
+          size="small"
+          onClick={() => { logout(); navigate('/login'); }}
+          sx={{ 
+            color: 'text.secondary', 
+            borderColor: 'divider',
+            '&:hover': {
+              borderColor: 'error.main',
+              color: 'error.main',
+              bgcolor: 'error.50'
+            }
+          }}
+        >
+          Logout
+        </Button>
+      </Box>
     </Box>
   );
 
