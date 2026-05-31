@@ -54,11 +54,6 @@ I designed and developed the entire web application including:
 - Working with Thymeleaf and server‑side rendering
 - Handling session management and security (Spring Security basics)
 
-## 📸 Screenshots
-
-| Home Page | Admin Dashboard | Facility Booking |
-|-----------|----------------|------------------|
-| (Add screenshot) | (Add screenshot) | (Add screenshot) |
 
 ## 🚀 Getting Started
 
