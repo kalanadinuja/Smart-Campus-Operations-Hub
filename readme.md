@@ -62,7 +62,4 @@ I designed and developed the entire web application including:
 - MySQL Server
 - Maven (or use the included Maven wrapper)
 
-### Clone the repository
-```bash
-git clone https://github.com/kalanadinuja/smart-campus-web-app.git
-cd smart-campus-web-app
+
